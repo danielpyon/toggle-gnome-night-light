@@ -61,8 +61,15 @@ func get_current_temp (bus dbus.BusObject) (uint32, error) {
     return temp, nil
 }
 
-func set_current_temp () {
+func set_current_temp (bus dbus.BusObject, temp uint32) error {
+    val := dbus.MakeVariant(temp)
+    err := bus.SetProperty(ColorInterface + ".Temperature", val)
 
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func main() {
@@ -75,11 +82,18 @@ func main() {
     bus := conn.Object(ColorInterface, ColorPath)
     curr_temp, err := get_current_temp(bus)
     if err != nil {
-        fmt.Fprintln(os.Stderr, "error: ", err)
+        fmt.Fprintln(os.Stderr, "Couldn't get temperature: ", err)
     }
     fmt.Println(curr_temp)
 
+    err = set_current_temp(bus, 3351)
+    if err != nil {
+        fmt.Fprintln(os.Stderr, "Couldn't set temperature: ", err)
+    }
+
     turn_nightlight_on_permanently()
+
+    // 3351
 }
 
 
