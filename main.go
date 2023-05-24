@@ -7,18 +7,26 @@ import (
     "github.com/godbus/dbus/v5"
 )
 
-// this program fixes buggy gnome settings daemon
-// specifically, the problem of not being able to toggle nightlight on permanently
+// this program fixes the problem of not being able to toggle nightlight on permanently
 
 // references
 // https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/blob/master/data/org.gnome.settings-daemon.plugins.color.gschema.xml.in
 // https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/blob/master/plugins/color/gsd-color-manager.c
 // https://github.com/godbus/dbus/blob/76236955d466b078d82dcb16b7cf1dcf40ac25df/_examples/mediakeys.go#L26
+// https://dbus.freedesktop.org/doc/dbus-specification.html#basic-types
 
 
 const ColorInterface = "org.gnome.SettingsDaemon.Color"
 const ColorPath = "/org/gnome/SettingsDaemon/Color"
 const ColorPlugin = "org.gnome.settings-daemon.plugins.color"
+
+type TempLevel uint32
+const (
+    SUPER_RED TempLevel = 1000
+    VERY_RED TempLevel = 3000
+    SLIGHTLY_RED TempLevel = 4000
+    OFF TempLevel = 6500
+)
 
 func set_gsd_property (name string, value string) error {
     cmd := exec.Command("gsettings", "set", ColorPlugin, name, value)
