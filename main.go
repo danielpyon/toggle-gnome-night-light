@@ -97,8 +97,8 @@ func main() {
     case "warmest": level = WARMEST
     default:
         // error
-        fmt.Fprintln(os.Stderr, "Invalid level: must be one of off, on, " +
-            "warm, warmer, or warmest.");
+        fmt.Fprintln(os.Stderr, "Invalid level: must be one of \"off\", " +
+            "\"on\", \"warm\", \"warmer\", or \"warmest\".");
         os.Exit(1)
     }
 
