@@ -6,6 +6,19 @@ import (
     "github.com/godbus/dbus/v5"
 )
 
+const ColorInterface = "org.gnome.SettingsDaemon.Color"
+const ColorPath = "/org/gnome/SettingsDaemon/Color"
+
+func get_current_temp (bus dbus.BusObject) (uint32, error) {
+    res, err := bus.GetProperty(ColorInterface + ".Temperature")
+
+    if err != nil {
+        return 0, err
+    }
+
+    temp := res.Value().(uint32)
+    return temp, nil
+}
 
 func main() {
     conn, err := dbus.ConnectSessionBus()
@@ -14,18 +27,13 @@ func main() {
     }
     defer conn.Close()
 
-    fmt.Println("Hello, World!")
-    var s []string
-    err = conn.BusObject().Call("org.freedesktop.DBus.ListNames", 0).Store(&s)
+    // var curr_temp uint32
+    bus := conn.Object(ColorInterface, ColorPath)
+    curr_temp, err := get_current_temp(bus)
     if err != nil {
-        fmt.Fprintln(os.Stderr, "Failed to get list of owned names: ", err)
-        os.Exit(1)
+        fmt.Fprintln(os.Stderr, "error: ", err)
     }
-
-    fmt.Println("Currently owned names on the session bus: ")
-    for _, v := range s {
-        fmt.Println(v);
-    }
+    fmt.Println(curr_temp)
 }
 
 
