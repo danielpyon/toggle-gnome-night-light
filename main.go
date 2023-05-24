@@ -5,6 +5,7 @@ import (
     "os"
     "os/exec"
     "github.com/godbus/dbus/v5"
+    "flag"
 )
 
 // this program fixes the problem of not being able to toggle nightlight on permanently
@@ -20,12 +21,13 @@ const ColorInterface = "org.gnome.SettingsDaemon.Color"
 const ColorPath = "/org/gnome/SettingsDaemon/Color"
 const ColorPlugin = "org.gnome.settings-daemon.plugins.color"
 
-type TempLevel uint32
+// change these constants to match your taste
 const (
-    SUPER_RED TempLevel = 1000
-    VERY_RED TempLevel = 3000
-    SLIGHTLY_RED TempLevel = 4000
-    OFF TempLevel = 6500
+    WARMEST uint32 = 1000
+    WARMER uint32 = 2000
+    WARM uint32 = 3000
+    ON uint32 = 4000
+    OFF uint32 = 6500
 )
 
 func set_gsd_property (name string, value string) error {
@@ -81,6 +83,25 @@ func set_current_temp (bus dbus.BusObject, temp uint32) error {
 }
 
 func main() {
+    // setup flags
+    level_ptr := flag.String("level", "on", "the level of warmth: off, on " +
+        "(default night light level), warm, warmer, or warmest")
+    flag.Parse()
+
+    var level uint32
+    switch *level_ptr {
+    case "off": level = OFF
+    case "on": level = ON
+    case "warm": level = WARM
+    case "warmer": level = WARMER
+    case "warmest": level = WARMEST
+    default:
+        // error
+        fmt.Fprintln(os.Stderr, "Invalid level: must be one of off, on, " +
+            "warm, warmer, or warmest.");
+        os.Exit(1)
+    }
+
     conn, err := dbus.ConnectSessionBus()
     if err != nil {
         fmt.Fprintln(os.Stderr, "Failed to connect to session bus: ", err);
@@ -91,17 +112,23 @@ func main() {
     curr_temp, err := get_current_temp(bus)
     if err != nil {
         fmt.Fprintln(os.Stderr, "Couldn't get temperature: ", err)
+    } else {
+        fmt.Println("Old temperature: ", curr_temp)
     }
-    fmt.Println(curr_temp)
 
-    err = set_current_temp(bus, 3351)
+    err = set_current_temp(bus, level)
     if err != nil {
         fmt.Fprintln(os.Stderr, "Couldn't set temperature: ", err)
     }
 
-    turn_nightlight_on_permanently()
+    curr_temp, err = get_current_temp(bus)
+    if err != nil {
+        fmt.Fprintln(os.Stderr, "Couldn't get temperature: ", err)
+    } else {
+        fmt.Println("New temperature: ", curr_temp)
+    }
 
-    // 3351
+    turn_nightlight_on_permanently()
 }
 
 
